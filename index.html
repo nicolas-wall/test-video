@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>A-Frame Image Scan to Video Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-ar@1.0.0/dist/aframe-ar.min.js"></script>
     <style>
@@ -32,11 +33,17 @@
         z-index: 1001;
         display: none;
       }
+      .ar-hidden {
+        display: none;
+      }
+      .ar-visible {
+        display: block;
+      }
     </style>
   </head>
   <body style="margin: 0;">
     <a-scene
-      ar="sourceType: webcam; detectionMode: mono; imageTargetSrc: url(YOUR_IMAGE_TARGET_URL)"
+      ar="sourceType: webcam; detectionMode: mono; imageTargetSrc: url(YOUR_IMAGE_TARGET_URL); canvasWidth: 1280; canvasHeight: 720;"
       embedded
       style="width: 100%; height: 100%;"
     >
@@ -48,6 +55,7 @@
           material="color: #FFFFFF;"
           position="0 0 0"
           rotation="-90 0 0"
+          class="ar-hidden"
         ></a-entity>
       </a-marker-camera>
 
@@ -57,24 +65,41 @@
     <div id="scan-message">
       Scan the image with your phone's camera.
     </div>
-    <button id="redirect-button">Go to Video</button>
+    <button id="redirect-button" class="ar-hidden">Go to Video</button>
 
     <script>
       const scanMessage = document.getElementById("scan-message");
       const redirectButton = document.getElementById("redirect-button");
+      const aScene = document.querySelector('a-scene');
+
+      let isMarkerFound = false;
+
+      aScene.addEventListener('loaded', () => {
+        if (!isMarkerFound) {
+          scanMessage.classList.remove('ar-hidden');
+          scanMessage.classList.add('ar-visible');
+        }
+      });
+
 
       // Marker found event
       document.querySelector("a-marker-camera").addEventListener("markerFound", () => {
         console.log("Marker Found!");
-        scanMessage.style.display = "none";
-        redirectButton.style.display = "block";
+        isMarkerFound = true;
+        scanMessage.classList.remove('ar-visible');
+        scanMessage.classList.add('ar-hidden');
+        redirectButton.classList.remove('ar-hidden');
+        redirectButton.classList.add('ar-visible');
       });
 
       // Marker lost event
       document.querySelector("a-marker-camera").addEventListener("markerLost", () => {
         console.log("Marker Lost!");
-        scanMessage.style.display = "block";
-        redirectButton.style.display = "none";
+        isMarkerFound = false;
+        scanMessage.classList.remove('ar-hidden');
+        scanMessage.classList.add('ar-visible');
+        redirectButton.classList.remove('ar-visible');
+        redirectButton.classList.add('ar-hidden');
       });
 
       redirectButton.addEventListener("click", () => {
